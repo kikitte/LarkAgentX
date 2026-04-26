@@ -88,16 +88,15 @@ async def browser_login(timeout: int = 180) -> str:
         while time.time() - start_time < timeout:
             cookies = await context.cookies()
 
-            # Check for session cookie that indicates successful login
-            has_session = any(
-                c['name'] in ('session', 'session_list', 'passport_web_did')
-                for c in cookies
-            )
-
-            # Also check if we've navigated to messenger (login complete)
+            all_cookie_names = {c['name'] for c in cookies}
             current_url = page.url
-            if has_session and ('messenger' in current_url or 'suite' in current_url):
-                # Build cookie string
+            has_session = 'session' in all_cookie_names or 'session_list' in all_cookie_names
+            on_messenger = 'messenger' in current_url
+
+            if has_session and on_messenger:
+                # Wait a moment for all cookies to settle, then capture
+                await asyncio.sleep(2)
+                cookies = await context.cookies()
                 cookie_str = "; ".join(f"{c['name']}={c['value']}" for c in cookies)
                 logger.info("Login successful! Cookie captured.")
                 break
