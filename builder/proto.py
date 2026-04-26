@@ -1,8 +1,90 @@
-import json
+import os
 
 import static.proto_pb2 as FLY_BOOK_PROTO
 from protobuf_to_dict import protobuf_to_dict
 from app.utils.lark_utils import generate_request_cid
+from app.config.settings import settings
+
+def _dump_card_debug(content: bytes):
+    """Save raw card message bytes to a debug file for offline analysis."""
+    import time
+    debug_dir = os.path.join(settings.DATA_DIR, "debug")
+    os.makedirs(debug_dir, exist_ok=True)
+    ts = int(time.time() * 1000)
+    filepath = os.path.join(debug_dir, f"card_msg_{ts}.bin")
+    with open(filepath, "wb") as f:
+        f.write(content)
+
+
+def _extract_card_text(content: bytes) -> str:
+    """Extract human-readable text from Feishu card message protobuf."""
+    try:
+        return _extract_card_proto(content)
+    except Exception:
+        return "[卡片消息]"
+
+
+def _extract_card_proto(data: bytes) -> str:
+    """Parse Feishu card message protobuf (CardContent)."""
+    card = FLY_BOOK_PROTO.CardContent()
+    card.ParseFromString(data)
+
+    title_text = card.header.title if card.header.title else ""
+
+    # Build block index and find the layout order
+    blocks = {}
+    layout_order = []
+    for block in card.body.blockList.blocks:
+        text = ""
+        if block.props.type == 6:
+            text = block.props.content.linkText
+        else:
+            text = block.props.content.text
+        blocks[block.id] = (block.props.type, text)
+        if block.props.type == 15 and block.props.childIds:
+            layout_order = list(block.props.childIds)
+
+    # Walk layout order first for ordered content
+    parts = []
+    seen = set()
+    for bid in layout_order:
+        seen.add(bid)
+        entry = blocks.get(bid)
+        if not entry:
+            continue
+        btype, text = entry
+        if btype in (15, 3, 11):
+            continue
+        if text:
+            parts.append(text)
+
+    # Collect remaining blocks in proto insertion order, separated by newlines
+    orphan_parts = []
+    for block in card.body.blockList.blocks:
+        if block.id in seen or block.props.type in (15, 3, 11):
+            continue
+        text = ""
+        if block.props.type == 6:
+            text = block.props.content.linkText
+        else:
+            text = block.props.content.text
+        if text:
+            orphan_parts.append(text)
+
+    body_parts = []
+    layout_body = ''.join(parts).replace('\n\n', '\n').strip()
+    orphan_body = '\n'.join(orphan_parts).strip()
+
+    if layout_body:
+        body_parts.append(layout_body)
+    if orphan_body:
+        body_parts.append(orphan_body)
+
+    body = '\n'.join(body_parts)
+    if title_text and body:
+        return f"{title_text}\n{body}"
+    return title_text or body or "[卡片消息]"
+
 
 class ProtoBuilder:
     @staticmethod
@@ -201,6 +283,10 @@ class ProtoBuilder:
                             TextProperty = protobuf_to_dict(TextProperty)
                             v['property'] = TextProperty
                             receive_content += TextProperty['content']
+                        ReceiveTextContent['content'] = receive_content
+                    elif message_type == 14:
+                        _dump_card_debug(content)
+                        receive_content = _extract_card_text(content)
                         ReceiveTextContent['content'] = receive_content
         return ReceiveTextContent
 

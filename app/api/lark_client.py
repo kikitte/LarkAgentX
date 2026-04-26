@@ -145,7 +145,7 @@ class LarkClient:
                     ReceiveTextContent = ProtoBuilder.decode_receive_msg_proto(message)
                     asyncio.run_coroutine_threadsafe(self.process_msg(ReceiveTextContent, message_handler), LarkClient.loop)
                 except Exception as e:
-                    # logger.error(f"Error processing message: {e}")
+                    logger.error(f"Error processing message: {e}")
                     continue
 
     async def process_msg(self, msg, message_handler):

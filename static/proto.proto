@@ -853,3 +853,60 @@ message UserInfo {
 message GetGroupInfoRequest{
     optional string chatId = 1;
 }
+
+// Card message types (message_type == 14)
+message CardContent {
+    optional int32 version = 1;
+    optional CardBody body = 2;
+    repeated string appVersions = 5;
+    optional int32 field7 = 7;
+    optional CardHeader header = 8;
+    optional int32 field9 = 9;
+    optional bytes field11 = 11;
+    optional int32 field12 = 12;
+    optional int64 field13 = 13;
+    optional int32 field14 = 14;
+    optional int32 field15 = 15;
+    optional bytes field20 = 20;
+}
+
+message CardHeader {
+    optional string title = 1;
+    repeated CardStyleEntry styles = 3;
+    optional string theme = 5;
+    optional string i18nTitle = 10;
+}
+
+message CardStyleEntry {
+    optional string key = 1;
+    optional string value = 2;
+}
+
+message CardBody {
+    optional string rootBlockId = 1;
+    optional string field2 = 2;
+    optional CardBlockList blockList = 3;
+    optional string field7 = 7;
+}
+
+message CardBlockList {
+    repeated CardBlock blocks = 1;
+}
+
+message CardBlock {
+    optional string id = 1;
+    optional CardBlockProps props = 2;
+}
+
+message CardBlockProps {
+    optional int32 type = 1;
+    repeated CardStyleEntry styles = 2;
+    optional CardTextContent content = 3;
+    repeated string childIds = 4;
+    repeated string classNames = 5;
+}
+
+message CardTextContent {
+    optional string text = 1;
+    optional string linkText = 2;
+}
