@@ -7,7 +7,10 @@ load_dotenv()
 class Settings:
     """Application settings"""
 
-    DB_PATH = os.getenv("DB_PATH", os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "lark_messages.db"))
+    DATA_DIR = os.getenv("DATA_DIR", "").strip()
+    if not DATA_DIR:
+        raise ValueError("DATA_DIR 未设置，请在 .env 中配置 DATA_DIR")
+    DB_PATH = os.path.join(DATA_DIR, os.getenv("DB_PATH", "lark_messages.db"))
     SQLALCHEMY_DATABASE_URI = f"sqlite:///{DB_PATH}"
 
     LARK_COOKIE = os.getenv("LARK_COOKIE", "")

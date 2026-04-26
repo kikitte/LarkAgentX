@@ -8,7 +8,8 @@ import asyncio
 from loguru import logger
 
 # Cookie storage path
-COOKIE_FILE = os.path.expanduser("~/.lark/msg/cookie.json")
+from app.config.settings import settings
+COOKIE_FILE = os.path.join(settings.DATA_DIR, "cookie.json")
 LOGIN_URL = "https://www.feishu.cn/messenger/"
 # Required cookie that indicates successful login
 AUTH_COOKIE_NAME = "session"
