@@ -48,6 +48,38 @@ def clear_saved_cookie():
         logger.info("Saved cookie cleared")
 
 
+async def _launch_browser(p):
+    """Launch the user's default system browser."""
+    import subprocess
+
+    # Detect default browser from system settings
+    try:
+        result = subprocess.run(
+            ["xdg-mime", "query", "default", "x-scheme-handler/https"],
+            capture_output=True, text=True
+        )
+        default_desktop = result.stdout.strip().lower()
+    except Exception:
+        default_desktop = ""
+
+    # Map desktop file to Playwright browser type
+    if "firefox" in default_desktop:
+        browser = await p.firefox.launch(headless=False)
+    elif "chromium" in default_desktop:
+        browser = await p.chromium.launch(headless=False)
+    elif "chrome" in default_desktop:
+        browser = await p.chromium.launch(headless=False, channel="chrome")
+    elif "edge" in default_desktop:
+        browser = await p.chromium.launch(headless=False, channel="msedge")
+    else:
+        # Fallback to chromium
+        browser = await p.chromium.launch(headless=False)
+        default_desktop = "chromium (fallback)"
+
+    logger.info(f"Using browser: {default_desktop}")
+    return browser
+
+
 async def browser_login(timeout: int = 180) -> str:
     """
     Open a browser for Feishu login and capture cookies.
@@ -75,7 +107,7 @@ async def browser_login(timeout: int = 180) -> str:
     logger.info(f"Please login within {timeout} seconds...")
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
+        browser = await _launch_browser(p)
         context = await browser.new_context()
         page = await context.new_page()
 
