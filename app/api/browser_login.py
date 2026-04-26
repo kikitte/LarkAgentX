@@ -111,7 +111,7 @@ async def browser_login(timeout: int = 180) -> str:
         context = await browser.new_context()
         page = await context.new_page()
 
-        await page.goto(LOGIN_URL)
+        await page.goto(LOGIN_URL, wait_until="domcontentloaded", timeout=60000)
 
         # Poll for login completion by checking cookies
         import time
