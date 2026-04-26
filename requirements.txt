@@ -6,7 +6,7 @@ protobuf3-to-dict==0.1.5
 PyExecJS==1.5.1
 python-dotenv==1.1.0
 requests==2.31.0
-SQLAlchemy==2.0.30
+SQLAlchemy>=2.0.35
 websockets==15.0.1
 fastmcp==2.1.2
 Brotli==1.1.0
