@@ -35,7 +35,11 @@ class LarkClient:
         headers = HeaderBuilder.build_get_csrf_token_header().get()
         params = ParamsBuilder.build_get_csrf_token_param().get()
         response = requests.post(self.csrf_token_url, headers=headers, cookies=self.auth.cookie, params=params)
-        res_json = response.json()
+        try:
+            res_json = response.json()
+        except Exception:
+            logger.error("CSRF token请求失败，Cookie可能已过期，请重新登录: python main.py --login")
+            raise
         x_csrf_token = response.cookies.get('swp_csrf_token')
         if not x_csrf_token:
             logger.error("未在响应中找到swp_csrf_token")
@@ -47,7 +51,11 @@ class LarkClient:
         headers = HeaderBuilder.build_get_user_info_header(self.x_csrf_token).get()
         params = ParamsBuilder.build_get_user_info_param().get()
         response = requests.get(self.user_info_url, headers=headers, cookies=self.auth.cookie, params=params)
-        res_json = response.json()
+        try:
+            res_json = response.json()
+        except Exception:
+            logger.error("获取用户信息失败，Cookie可能已过期，请重新登录: python main.py --login")
+            raise
         user_id = res_json['data']['user']['id']
         return res_json, user_id
 
