@@ -7,13 +7,8 @@ load_dotenv()
 class Settings:
     """Application settings"""
 
-    DB_HOST = os.getenv("DB_HOST", "localhost")
-    DB_PORT = int(os.getenv("DB_PORT", "3306"))
-    DB_USER = os.getenv("DB_USER", "root")
-    DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
-    DB_NAME = os.getenv("DB_NAME", "lark_messages")
-
-    SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    DB_PATH = os.getenv("DB_PATH", os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "lark_messages.db"))
+    SQLALCHEMY_DATABASE_URI = f"sqlite:///{DB_PATH}"
 
     LARK_COOKIE = os.getenv("LARK_COOKIE", "")
     LARK_BASE_URL = "https://internal-api-lark-api.feishu.cn/im/gateway/"
